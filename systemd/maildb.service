@@ -1,0 +1,6 @@
+[Unit]
+Description=Mail Database Service
+
+[Service]
+ExecStart=/usr/local/sbin/maildb
+Restart=always

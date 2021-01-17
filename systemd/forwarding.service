@@ -1,0 +1,6 @@
+[Unit]
+Description=SMTP Forwarding Service
+
+[Service]
+ExecStart=/usr/local/sbin/forwarding
+Restart=always

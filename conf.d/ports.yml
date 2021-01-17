@@ -1,0 +1,4 @@
+port_auth: 9000
+port_mailout: 2525
+port_forwarding: 2500
+port_maildb: 8081

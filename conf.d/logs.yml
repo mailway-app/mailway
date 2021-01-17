@@ -1,0 +1,3 @@
+log_frontline_error: /var/log/frontline-nginx/debug.log
+log_frontline_http_access: /var/log/frontline-nginx-http/access.log
+log_frontline_http_error: /var/log/frontline-nginx-http/error.log

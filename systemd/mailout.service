@@ -1,0 +1,6 @@
+[Unit]
+Description=Mail Outgoing Gateway
+
+[Service]
+ExecStart=/usr/local/sbin/mailout
+Restart=always

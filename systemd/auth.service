@@ -1,0 +1,6 @@
+[Unit]
+Description=SMTP Authentication Service
+
+[Service]
+ExecStart=/usr/local/sbin/auth
+Restart=always

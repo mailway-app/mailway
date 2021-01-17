@@ -1,0 +1,65 @@
+daemon off;
+error_log {{ .LogFrontlineError }} warn;
+worker_processes auto;
+
+events {
+    worker_connections  1024;
+}
+
+mail {
+    server {
+        listen 0.0.0.0:25;
+        protocol smtp;
+        smtp_auth none;
+        proxy on;
+
+        auth_http   127.0.0.1:{{ .PortAuth }};
+
+        xclient on;
+        proxy_pass_error_message off;
+    }
+
+#   server {
+#       listen 0.0.0.0:465 ssl;
+#       protocol smtp;
+#       smtp_auth none;
+#       proxy on;
+#       starttls on;
+
+#       server_name {{ .InstanceHostname }};
+
+#       auth_http   127.0.0.1:{{ .PortAuth }};
+
+#       xclient on;
+#       proxy_pass_error_message off;
+
+#       ssl_certificate     /etc/letsencrypt/live/smtp-{{ .InstanceHostname }}/fullchain.pem;
+#       ssl_certificate_key /etc/letsencrypt/live/smtp-{{ .InstanceHostname }}/privkey.pem;
+#       ssl_protocols TLSv1 TLSv1.1 TLSv1.2 TLSv1.3;
+#   }
+}
+
+http {
+    charset              utf-8;
+    access_log           {{ .LogFrontlineHTTPAccess }};
+    error_log            {{ .LogFrontlineHTTPError }};
+
+    server {
+      listen 0.0.0.0:443 ssl;
+      listen [::]:443 ssl;
+
+      server_name         {{ .InstanceHostname }};
+      ssl_certificate     /etc/ssl/certs/http-{{ .InstanceHostname }}.pem;
+      ssl_certificate_key /etc/ssl/private/http-{{ .InstanceHostname }}.pem;
+      ssl_protocols TLSv1 TLSv1.1 TLSv1.2 TLSv1.3;
+
+      ssl_session_timeout 1d;
+      ssl_session_cache shared:SSL:50m;
+      ssl_session_tickets off;
+
+      location /db/ {
+        proxy_pass      http://127.0.0.1:{{ .PortMaildb }}/db/;
+      }
+    }
+}
+
