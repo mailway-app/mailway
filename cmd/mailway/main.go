@@ -78,6 +78,9 @@ func setup() error {
 				panic(err)
 			}
 
+			// reload config
+			loadConfig()
+
 			if err := generateFrontlineConf(); err != nil {
 				return errors.Wrap(err, "could not generate frontline conf")
 			}
@@ -177,13 +180,17 @@ func setupSecureSmtp() error {
 	return nil
 }
 
-func main() {
+func loadConfig() {
 	c, err := mconfig.Read()
 	if err != nil {
 		log.Fatalf("could not read config: %s", err)
 	}
 	CONFIG = c
-	log.SetLevel(c.GetLogLevel())
+}
+
+func main() {
+	loadConfig()
+	log.SetLevel(CONFIG.GetLogLevel())
 
 	switch os.Args[1] {
 	case "setup":
