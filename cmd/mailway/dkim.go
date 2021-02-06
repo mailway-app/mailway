@@ -4,7 +4,6 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
-	"fmt"
 
 	"github.com/pkg/errors"
 
@@ -13,13 +12,8 @@ import (
 )
 
 func generateDKIM() ([]byte, error) {
-	config, err := mconfig.Read()
-	if err != nil {
-		return []byte{}, errors.Wrap(err, "could not read config")
-	}
-
-	certPath := fmt.Sprintf("/etc/ssl/certs/dkim-%s.pem", config.InstanceHostname)
-	privPath := fmt.Sprintf("/etc/ssl/private/dkim-%s.pem", config.InstanceHostname)
+	certPath := "/etc/ssl/certs/mailway-dkim.pem"
+	privPath := "/etc/ssl/private/mailway-dkim.pem"
 
 	if fileExists(certPath) || fileExists(privPath) {
 		log.Warnf("%s or %s already exist; skipping DKIM key generation.", certPath, privPath)
