@@ -3,7 +3,9 @@ package main
 import (
 	"encoding/base64"
 	"fmt"
+	"io/ioutil"
 	"net"
+	"net/http"
 	"net/url"
 	"os"
 	"os/exec"
@@ -48,7 +50,10 @@ func setup() error {
 		return errors.Wrap(err, "could not generate DKIM keys")
 	}
 
-	ip := GetOutboundIP()
+	ip, err := GetOutboundIP()
+	if err != nil {
+		return errors.Wrap(err, "could not get outbound IP")
+	}
 	url := fmt.Sprintf(
 		"https://dash.mailway.app/helo?server_id=%s&ip=%s&dkim=%s",
 		CONFIG.ServerId, ip, url.QueryEscape(base64.StdEncoding.EncodeToString(dkim)))
@@ -110,15 +115,19 @@ func printConfig() {
 }
 
 // Get preferred outbound ip of this machine
-func GetOutboundIP() net.IP {
-	conn, err := net.Dial("udp", "1.1.1.1:53")
+func GetOutboundIP() (*net.IP, error) {
+	url := "https://api.ipify.org?format=text"
+	resp, err := http.Get(url)
 	if err != nil {
-		log.Fatal(err)
+		return nil, errors.Wrap(err, "failed to call the ip api")
 	}
-	defer conn.Close()
-
-	localAddr := conn.LocalAddr().(*net.UDPAddr)
-	return localAddr.IP
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not read response body")
+	}
+	ip := net.ParseIP(string(body[:]))
+	return &ip, nil
 }
 
 func services(action string) {
