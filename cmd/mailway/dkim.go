@@ -24,7 +24,7 @@ func getDNSKey(pubKeyPath string) ([]byte, error) {
 		return []byte{}, errors.New("public key is not in PEM format")
 	}
 
-	pubKey, err := x509.ParsePKIXPublicKey(pubPem.Bytes)
+	pubKey, err := x509.ParsePKCS1PublicKey(pubPem.Bytes)
 	if err != nil {
 		return []byte{}, errors.Wrap(err, "could not read public RSA key")
 	}
