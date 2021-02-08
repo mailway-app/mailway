@@ -4,6 +4,8 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
+	"encoding/pem"
+	"io/ioutil"
 
 	"github.com/pkg/errors"
 
@@ -11,13 +13,37 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+func getDNSKey(pubKeyPath string) ([]byte, error) {
+	bytes, err := ioutil.ReadFile(pubKeyPath)
+	if err != nil {
+		return []byte{}, errors.New("could not read public key file")
+	}
+
+	pubPem, _ := pem.Decode(bytes)
+	if pubPem == nil {
+		return []byte{}, errors.New("public key is not in PEM format")
+	}
+
+	pubKey, err := x509.ParsePKIXPublicKey(pubPem.Bytes)
+	if err != nil {
+		return []byte{}, errors.Wrap(err, "could not read public RSA key")
+	}
+
+	// encode key for DNS
+	bytes, err = x509.MarshalPKIXPublicKey(pubKey)
+	if err != nil {
+		return []byte{}, errors.Wrap(err, "could not marshal public key")
+	}
+	return bytes, nil
+}
+
 func generateDKIM() ([]byte, error) {
 	certPath := "/etc/ssl/certs/mailway-dkim.pem"
-	privPath := "/etc/ssl/private/mailway-dkim.pem"
+	privPath := CONFIG.OutDKIMPath
 
 	if fileExists(certPath) || fileExists(privPath) {
 		log.Warnf("%s or %s already exist; skipping DKIM key generation.", certPath, privPath)
-		return []byte{}, nil
+		return getDNSKey(certPath)
 	}
 
 	reader := rand.Reader
@@ -43,10 +69,5 @@ func generateDKIM() ([]byte, error) {
 		return []byte{}, errors.Wrap(err, "could not write DKIM config")
 	}
 
-	// encode key for DNS
-	bytes, err := x509.MarshalPKIXPublicKey(&key.PublicKey)
-	if err != nil {
-		return []byte{}, errors.Wrap(err, "could not marshal public key")
-	}
-	return bytes, nil
+	return getDNSKey(certPath)
 }
