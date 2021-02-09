@@ -65,9 +65,10 @@ func generateHTTPCert() error {
 	cert, err := m.GetCertificate(&tls.ClientHelloInfo{
 		ServerName: CONFIG.InstanceHostname,
 	})
-	log.Info("OK")
 	if err != nil {
 		return errors.Wrap(err, "could not generate certificate")
+	} else {
+		log.Info("OK")
 	}
 
 	// certificate

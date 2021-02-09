@@ -132,10 +132,10 @@ func GetOutboundIP() (*net.IP, error) {
 
 func services(action string) {
 	for _, service := range SERVICES {
-		log.Debugf("service %s %s", action, service)
-		cmd := exec.Command("service", service, action)
+		cmd := exec.Command("systemctl", action, service)
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
+		log.Debugf("running: %s", cmd)
 		err := cmd.Run()
 		if err != nil {
 			log.Errorf("failed to %s service %s: %s", action, service, err)
