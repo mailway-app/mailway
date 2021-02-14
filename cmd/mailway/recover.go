@@ -8,6 +8,8 @@ import (
 	"net/smtp"
 	"os"
 
+	"github.com/mailway-app/config"
+
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 )
@@ -26,7 +28,7 @@ func recoverEmail(file string) error {
 	from := msg.Header.Get("Mw-Int-Mail-From")
 	to := msg.Header.Get("Mw-Int-Rcpt-To")
 
-	addr := fmt.Sprintf("127.0.0.1:%d", CONFIG.PortForwarding)
+	addr := fmt.Sprintf("127.0.0.1:%d", config.CurrConfig.PortForwarding)
 	err = smtp.SendMail(addr, nil, from, []string{to}, data)
 	if err != nil {
 		return errors.Wrap(err, "could not send email")

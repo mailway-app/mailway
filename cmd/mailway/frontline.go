@@ -7,6 +7,8 @@ import (
 	"os"
 	"text/template"
 
+	"github.com/mailway-app/config"
+
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/acme/autocert"
@@ -28,7 +30,7 @@ func generateFrontlineConf() error {
 	}
 	defer dest.Close()
 
-	err = tmpl.Execute(dest, CONFIG)
+	err = tmpl.Execute(dest, config.CurrConfig)
 	if err != nil {
 		return errors.Wrap(err, "failed to render template")
 	}
@@ -44,8 +46,8 @@ func loggingMiddleware(next http.Handler) http.Handler {
 }
 
 func generateHTTPCert() error {
-	certPath := fmt.Sprintf("/etc/ssl/certs/http-%s.pem", CONFIG.InstanceHostname)
-	privPath := fmt.Sprintf("/etc/ssl/private/http-%s.pem", CONFIG.InstanceHostname)
+	certPath := fmt.Sprintf("/etc/ssl/certs/http-%s.pem", config.CurrConfig.InstanceHostname)
+	privPath := fmt.Sprintf("/etc/ssl/private/http-%s.pem", config.CurrConfig.InstanceHostname)
 	if fileExists(certPath) || fileExists(privPath) {
 		log.Warnf("%s or %s already exist; skipping HTTPS key generation.", certPath, privPath)
 		return nil
@@ -53,7 +55,7 @@ func generateHTTPCert() error {
 
 	m := &autocert.Manager{
 		Prompt: autocert.AcceptTOS,
-		Email:  CONFIG.InstanceEmail,
+		Email:  config.CurrConfig.InstanceEmail,
 	}
 
 	h := loggingMiddleware(m.HTTPHandler(nil))
@@ -61,9 +63,9 @@ func generateHTTPCert() error {
 		log.Fatal(http.ListenAndServe(":http", h))
 	}()
 
-	log.Infof("asking a certificate for %s; this could take a minute or two", CONFIG.InstanceHostname)
+	log.Infof("asking a certificate for %s; this could take a minute or two", config.CurrConfig.InstanceHostname)
 	cert, err := m.GetCertificate(&tls.ClientHelloInfo{
-		ServerName: CONFIG.InstanceHostname,
+		ServerName: config.CurrConfig.InstanceHostname,
 	})
 	if err != nil {
 		return errors.Wrap(err, "could not generate certificate")

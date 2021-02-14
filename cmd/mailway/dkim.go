@@ -9,7 +9,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	mconfig "github.com/mailway-app/config"
+	"github.com/mailway-app/config"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -39,7 +39,7 @@ func getDNSKey(pubKeyPath string) ([]byte, error) {
 
 func generateDKIM() ([]byte, error) {
 	certPath := "/etc/ssl/certs/mailway-dkim.pem"
-	privPath := CONFIG.OutDKIMPath
+	privPath := config.CurrConfig.OutDKIMPath
 
 	if fileExists(certPath) || fileExists(privPath) {
 		log.Warnf("%s or %s already exist; skipping DKIM key generation.", certPath, privPath)
@@ -64,7 +64,7 @@ func generateDKIM() ([]byte, error) {
 		return []byte{}, errors.Wrap(err, "could not save private key")
 	}
 
-	err = mconfig.WriteDKIM(privPath)
+	err = config.WriteDKIM(privPath)
 	if err != nil {
 		return []byte{}, errors.Wrap(err, "could not write DKIM config")
 	}

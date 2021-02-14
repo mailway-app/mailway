@@ -11,7 +11,7 @@ import (
 	"os/exec"
 	"time"
 
-	mconfig "github.com/mailway-app/config"
+	"github.com/mailway-app/config"
 
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
@@ -28,9 +28,8 @@ var (
 		"auth",
 		"forwarding",
 		"frontline",
+		"mailway-supervisor",
 	}
-
-	CONFIG *mconfig.Config
 )
 
 func fileExists(filename string) bool {
@@ -56,7 +55,7 @@ func setup() error {
 	}
 	url := fmt.Sprintf(
 		"https://dash.mailway.app/helo?server_id=%s&ip=%s&dkim=%s",
-		CONFIG.ServerId, ip, url.QueryEscape(base64.StdEncoding.EncodeToString(dkim)))
+		config.CurrConfig.ServerId, ip, url.QueryEscape(base64.StdEncoding.EncodeToString(dkim)))
 	fmt.Printf("Open %s\n", url)
 
 	ticker := time.NewTicker(2 * time.Second)
@@ -64,7 +63,7 @@ func setup() error {
 	for {
 		select {
 		case <-ticker.C:
-			jwt, err := authorize(CONFIG.ServerId)
+			jwt, err := authorize(config.CurrConfig.ServerId)
 			if err != nil {
 				panic(err)
 			}
@@ -81,13 +80,10 @@ func setup() error {
 			if err != nil {
 				panic(err)
 			}
-			err = mconfig.WriteInstanceConfig(data.Hostname, data.Email)
+			err = config.WriteInstanceConfig(data.Hostname, data.Email)
 			if err != nil {
 				panic(err)
 			}
-
-			// reload config
-			loadConfig()
 
 			if err := generateFrontlineConf(); err != nil {
 				return errors.Wrap(err, "could not generate frontline conf")
@@ -107,7 +103,7 @@ func setup() error {
 }
 
 func printConfig() {
-	s, err := mconfig.PrettyPrint()
+	s, err := config.PrettyPrint()
 	if err != nil {
 		panic(err)
 	}
@@ -161,25 +157,20 @@ func logs() {
 }
 
 func setupSecureSmtp() error {
-	c, err := mconfig.Read()
-	if err != nil {
-		return errors.Wrap(err, "could not read config")
-	}
-
 	log.Info("Install certbot")
 	cmd := exec.Command("apt-get", "install", "-y", "certbot")
 	log.Debug(cmd)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	err = cmd.Run()
+	err := cmd.Run()
 	if err != nil {
 		return errors.Wrap(err, "failed to install certbot")
 	}
 
 	log.Info("Run certbot")
 	cmd = exec.Command("certbot", "certonly", "--manual",
-		"--domain="+c.InstanceHostname, "--email="+c.InstanceEmail,
-		"--cert-name=smtp-"+c.InstanceHostname, "--preferred-challenges=dns")
+		"--domain="+config.CurrConfig.InstanceHostname, "--email="+config.CurrConfig.InstanceEmail,
+		"--cert-name=smtp-"+config.CurrConfig.InstanceHostname, "--preferred-challenges=dns")
 	log.Debug(cmd)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -192,17 +183,30 @@ func setupSecureSmtp() error {
 	return nil
 }
 
-func loadConfig() {
-	c, err := mconfig.Read()
+func newJWT() error {
+	jwt, err := authorize(config.CurrConfig.ServerId)
 	if err != nil {
-		log.Fatalf("could not read config: %s", err)
+		return errors.Wrap(err, "failed to call authorize")
 	}
-	CONFIG = c
+	token, err := parseJWT(jwt)
+	if err != nil {
+		return errors.Wrap(err, "failed to parse JWT")
+	}
+	data, err := getJWTData(token)
+	if err != nil {
+		return errors.Wrap(err, "failed to get JWT data")
+	}
+	err = config.WriteInstanceConfig(data.Hostname, data.Email)
+	if err != nil {
+		return errors.Wrap(err, "failed to write config")
+	}
+	return nil
 }
 
 func main() {
-	loadConfig()
-	log.SetLevel(CONFIG.GetLogLevel())
+	if err := config.Init(); err != nil {
+		log.Fatalf("failed to init config: %s", err)
+	}
 
 	switch os.Args[1] {
 	case "setup":
@@ -214,20 +218,7 @@ func main() {
 			log.Fatal(err)
 		}
 	case "new-jwt":
-		jwt, err := authorize(CONFIG.ServerId)
-		if err != nil {
-			log.Fatal(err)
-		}
-		token, err := parseJWT(jwt)
-		if err != nil {
-			log.Fatal(err)
-		}
-		data, err := getJWTData(token)
-		if err != nil {
-			log.Fatal(err)
-		}
-		err = mconfig.WriteInstanceConfig(data.Hostname, data.Email)
-		if err != nil {
+		if err := newJWT(); err != nil {
 			log.Fatal(err)
 		}
 	case "restart":
@@ -242,6 +233,10 @@ func main() {
 		}
 	case "config":
 		printConfig()
+	case "supervisor":
+		if err := supervise(); err != nil {
+			log.Fatalf("failed to supervise: %s", err)
+		}
 	case "recover":
 		if err := recoverEmail(os.Args[2]); err != nil {
 			log.Fatalf("could not recover email: %s", err)

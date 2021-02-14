@@ -1,0 +1,6 @@
+[Unit]
+Description=Mailway supervisor
+
+[Service]
+ExecStart=/usr/local/sbin/mailway supervisor
+Restart=always

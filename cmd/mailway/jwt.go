@@ -40,7 +40,7 @@ type authorizeRes struct {
 }
 
 func lookupPublicKey() (interface{}, error) {
-	data, err := ioutil.ReadFile(path.Join(mconfig.CONFIG_LOCATION, "key.pub"))
+	data, err := ioutil.ReadFile(path.Join(mconfig.ROOT_LOCATION, "key.pub"))
 	if err != nil {
 		return nil, errors.Wrap(err, "could not read key file")
 	}

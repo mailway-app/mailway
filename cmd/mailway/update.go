@@ -39,6 +39,9 @@ func update() error {
 		log.Error(err)
 	}
 	for _, service := range SERVICES {
+		if service == "mailway-supervisor" {
+			continue
+		}
 		if err := aptInstall(service); err != nil {
 			log.Error(err)
 		}
