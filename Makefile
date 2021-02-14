@@ -14,7 +14,6 @@ $(DIST)/mailway:
 .PHONY: deb
 deb: $(DIST)/mailway
 	mkdir -p \
-		$(DIST)/etc/cron.daily \
 		$(DIST)/etc/mailway \
 		$(DIST)/etc/mailway/conf.d \
 		$(DIST)/etc/mailway/frontline \
@@ -24,7 +23,6 @@ deb: $(DIST)/mailway
 	cp ./systemd/* $(DIST)/etc/systemd/system/
 	cp ./key.pub $(DIST)/etc/mailway
 	cp ./spamc.py $(DIST)/usr/local/spamc.py
-	cp ./cron.daily/* $(DIST)/etc/cron.daily
 	chmod +x $(DIST)/usr/local/spamc.py
 	fpm -n mailway -s dir -t deb --chdir=$(DIST) --version=$(VERSION) $(FPM_ARGS) \
 		--after-install ./after-install.sh \
