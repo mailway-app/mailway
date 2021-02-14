@@ -4,7 +4,7 @@ go 1.13
 
 require (
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
-	github.com/mailway-app/config v0.0.0-20210214151609-9f149a8cacb4
+	github.com/mailway-app/config v0.0.0-20210214183823-a092c8c3a426
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.7.0
 	golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad
