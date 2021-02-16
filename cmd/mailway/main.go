@@ -44,6 +44,11 @@ func fileExists(filename string) bool {
 }
 
 func setup() error {
+	if err := runPreflightChecks(); err != nil {
+		return errors.Wrap(err, "preflight checks failed")
+	}
+	log.Info("preflight check passed")
+
 	dkim, err := generateDKIM()
 	if err != nil {
 		return errors.Wrap(err, "could not generate DKIM keys")
@@ -207,6 +212,9 @@ func main() {
 	if err := config.Init(); err != nil {
 		log.Fatalf("failed to init config: %s", err)
 	}
+	if len(os.Args) != 2 {
+		log.Fatalf("no subcommand not found")
+	}
 
 	switch os.Args[1] {
 	case "setup":
@@ -242,7 +250,6 @@ func main() {
 			log.Fatalf("could not recover email: %s", err)
 		}
 	default:
-		fmt.Printf("subcommand %s not found\n", os.Args[1])
-		os.Exit(1)
+		log.Fatalf("subcommand %s not found\n", os.Args[1])
 	}
 }
