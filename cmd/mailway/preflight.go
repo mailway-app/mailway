@@ -5,12 +5,15 @@ import (
 	"net"
 	"time"
 
+	"github.com/mailway-app/config"
+
 	"github.com/pkg/errors"
 )
 
 func runPreflightChecks() error {
-	if ok, _ := testPort(25); !ok {
-		return errors.New("port 25 appears to be blocked")
+	port := config.CurrConfig.PortFrontlineSMTP
+	if ok, _ := testPort(port); !ok {
+		return errors.Errorf("port %d appears to be blocked", port)
 	}
 	return nil
 }

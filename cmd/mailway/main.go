@@ -212,8 +212,8 @@ func main() {
 	if err := config.Init(); err != nil {
 		log.Fatalf("failed to init config: %s", err)
 	}
-	if len(os.Args) != 2 {
-		log.Fatalf("no subcommand not found")
+	if len(os.Args) < 2 {
+		log.Fatalf("subcommand not found")
 	}
 
 	switch os.Args[1] {
@@ -223,6 +223,10 @@ func main() {
 		}
 	case "setup-secure-smtp":
 		if err := setupSecureSmtp(); err != nil {
+			log.Fatal(err)
+		}
+	case "generate-frontline-config":
+		if err := generateFrontlineConf(); err != nil {
 			log.Fatal(err)
 		}
 	case "new-jwt":
