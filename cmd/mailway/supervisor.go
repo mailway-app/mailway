@@ -19,6 +19,8 @@ func supervise() error {
 			log.Fatalf("failed to supervise server JWT: %s", err)
 		}
 	}()
+
+	log.Info("supervisor running")
 	<-done
 	return nil
 }
