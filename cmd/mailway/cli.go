@@ -7,6 +7,8 @@ import (
 )
 
 var (
+	isLocalSetup bool
+
 	rootCmd = &cobra.Command{
 		Use:   "mailway",
 		Short: "Mailway CLI",
@@ -127,6 +129,9 @@ var (
 )
 
 func init() {
+	setupCmd.Flags().BoolVar(&isLocalSetup, "local", false,
+		"Don't connect with Mailway API, run in local mode")
+
 	rootCmd.AddCommand(setupCmd)
 	rootCmd.AddCommand(setupSecureSMTPCmd)
 	rootCmd.AddCommand(generateFrontlineConfigCmd)

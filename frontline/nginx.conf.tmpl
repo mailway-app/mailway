@@ -43,6 +43,7 @@ mail {
 #   }
 }
 
+{{if ne .InstanceMode "local" }} 
 http {
     charset              utf-8;
     access_log           {{ .LogFrontlineHTTPAccess }};
@@ -66,4 +67,4 @@ http {
       }
     }
 }
-
+{{end}}

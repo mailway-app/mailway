@@ -134,7 +134,7 @@ func newJWT() error {
 	if err != nil {
 		return errors.Wrap(err, "failed to get JWT data")
 	}
-	err = config.WriteInstanceConfig(data.Hostname, data.Email)
+	err = config.WriteInstanceConfig("connected", data.Hostname, data.Email)
 	if err != nil {
 		return errors.Wrap(err, "failed to write config")
 	}
