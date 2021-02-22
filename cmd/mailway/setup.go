@@ -3,33 +3,66 @@ package main
 import (
 	"encoding/base64"
 	"fmt"
+	"net"
 	"net/url"
 	"time"
 
 	"github.com/mailway-app/config"
 
+	valid "github.com/asaskevich/govalidator"
+	"github.com/manifoldco/promptui"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 )
 
-func setup() error {
-	if err := runPreflightChecks(); err != nil {
-		return errors.Wrap(err, "preflight checks failed")
-	}
-	log.Info("preflight check passed")
-
-	dkim, err := generateDKIM()
-	if err != nil {
-		return errors.Wrap(err, "could not generate DKIM keys")
+func prompConfirm(isOptional bool, msg string) {
+	prompt := promptui.Prompt{
+		Label:     fmt.Sprintf("Did you %s", msg),
+		IsConfirm: true,
+		Default:   "y",
 	}
 
-	ip, err := GetOutboundIP()
+	_, err := prompt.Run()
 	if err != nil {
-		return errors.Wrap(err, "could not get outbound IP")
+		if !isOptional {
+			log.Fatalf("Before proceeding with the setup you need to: %s", msg)
+		}
 	}
+}
+
+func getText(msg string, validation string) string {
+	validate := func(input string) error {
+		switch validation {
+		case "domain":
+			if !valid.IsDNSName(input) {
+				return errors.New("Domain name must be valid")
+			}
+		case "email":
+			if !valid.IsEmail(input) {
+				return errors.New("Email address must be valid")
+			}
+		default:
+			panic("unknown validation")
+		}
+		return nil
+	}
+
+	prompt := promptui.Prompt{
+		Label:    msg,
+		Validate: validate,
+	}
+	result, err := prompt.Run()
+	if err != nil {
+		log.Fatalf("Prompt failed %v\n", err)
+		return ""
+	}
+	return result
+}
+
+func setupConnected(ip *net.IP, dkim string) error {
 	url := fmt.Sprintf(
 		"https://dash.mailway.app/helo?server_id=%s&ip=%s&dkim=%s",
-		config.CurrConfig.ServerId, ip, url.QueryEscape(base64.StdEncoding.EncodeToString(dkim)))
+		config.CurrConfig.ServerId, ip, url.QueryEscape(dkim))
 	fmt.Printf("Open %s\n", url)
 
 	ticker := time.NewTicker(2 * time.Second)
@@ -54,7 +87,7 @@ func setup() error {
 			if err != nil {
 				panic(err)
 			}
-			err = config.WriteInstanceConfig(data.Hostname, data.Email)
+			err = config.WriteInstanceConfig("connected", data.Hostname, data.Email)
 			if err != nil {
 				panic(err)
 			}
@@ -73,5 +106,68 @@ func setup() error {
 			ticker.Stop()
 			return nil
 		}
+	}
+}
+
+func setupLocal(ip *net.IP, dkim string) error {
+	hostname := getText("Please enter the name of your email server (for example: mx.example.com)", "domain")
+
+	dnsFields := func(name, value string) string {
+		return fmt.Sprintf("Name: %s\nValue:\n\n%s\n", name, value)
+	}
+
+	fmt.Printf("Add a DNS record (type A);\n%s\n", dnsFields(hostname, ip.String()))
+	prompConfirm(false, "add the A DNS record")
+
+	fmt.Printf("Optionally, add a DNS record (type TXT):\n%s\n",
+		dnsFields(hostname, fmt.Sprintf("v=spf1 ip4:%s/32 ~all", ip)))
+	prompConfirm(true, "add the TXT DNS record")
+
+	fmt.Printf("Optionally, add a DNS record (type TXT):\n%s\n",
+		dnsFields("smtp._domainkey."+hostname, fmt.Sprintf("v=DKIM1; k=rsa; p=%s", dkim)))
+	prompConfirm(true, "add the TXT DNS record")
+
+	email := getText("Please enter your email address (email will only be used to generate certificates)", "email")
+
+	err := config.WriteInstanceConfig("local", hostname, email)
+	if err != nil {
+		return errors.Wrap(err, "could not write instance config")
+	}
+
+	if err := generateFrontlineConf(); err != nil {
+		return errors.Wrap(err, "could not generate frontline conf")
+	}
+
+	log.Info("Setup completed; starting email service")
+	services("start")
+	return nil
+}
+
+func setup() error {
+	if isLocalSetup {
+		log.Info("Setup for local mode")
+	}
+
+	if err := runPreflightChecks(); err != nil {
+		return errors.Wrap(err, "preflight checks failed")
+	}
+	log.Info("preflight check passed")
+
+	dkim, err := generateDKIM()
+	if err != nil {
+		return errors.Wrap(err, "could not generate DKIM keys")
+	}
+
+	ip, err := GetOutboundIP()
+	if err != nil {
+		return errors.Wrap(err, "could not get outbound IP")
+	}
+
+	base64Dkim := base64.StdEncoding.EncodeToString(dkim)
+
+	if isLocalSetup {
+		return setupLocal(ip, base64Dkim)
+	} else {
+		return setupConnected(ip, base64Dkim)
 	}
 }
