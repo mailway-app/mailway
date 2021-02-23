@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"net/url"
+	"os"
 	"time"
 
 	"github.com/mailway-app/config"
@@ -16,6 +17,10 @@ import (
 )
 
 func prompConfirm(isOptional bool, msg string) {
+	if v := os.Getenv("DEBIAN_FRONTEND"); v == "noninteractive" {
+		log.Info("Assuming yes because output is not a tty")
+		return
+	}
 	prompt := promptui.Prompt{
 		Label:     fmt.Sprintf("Did you %s", msg),
 		IsConfirm: true,
@@ -110,7 +115,14 @@ func setupConnected(ip *net.IP, dkim string) error {
 }
 
 func setupLocal(ip *net.IP, dkim string) error {
-	hostname := getText("Please enter the name of your email server (for example: mx.example.com)", "domain")
+	var hostname string
+	var email string
+
+	if v := os.Getenv("MW_HOSTNAME"); v != "" {
+		hostname = v
+	} else {
+		hostname = getText("Please enter the name of your email server (for example: mx.example.com)", "domain")
+	}
 
 	dnsFields := func(name, value string) string {
 		return fmt.Sprintf("Name: %s\nValue:\n\n%s\n", name, value)
@@ -127,7 +139,11 @@ func setupLocal(ip *net.IP, dkim string) error {
 		dnsFields("smtp._domainkey."+hostname, fmt.Sprintf("v=DKIM1; k=rsa; p=%s", dkim)))
 	prompConfirm(true, "add the TXT DNS record")
 
-	email := getText("Please enter your email address (email will only be used to generate certificates)", "email")
+	if v := os.Getenv("MW_EMAIL"); v != "" {
+		email = v
+	} else {
+		email = getText("Please enter your email address (email will only be used to generate certificates)", "email")
+	}
 
 	err := config.WriteInstanceConfig("local", hostname, email)
 	if err != nil {
