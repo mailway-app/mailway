@@ -30,5 +30,6 @@ deb: $(DIST)/mailway
 		--depends auth \
 		--depends forwarding \
 		--depends mailout \
+		--depends webhooks \
 		--depends maildb
 

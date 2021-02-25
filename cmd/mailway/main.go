@@ -26,6 +26,7 @@ var (
 		"forwarding",
 		"frontline",
 		"mailway-supervisor",
+		"webhooks",
 	}
 )
 
