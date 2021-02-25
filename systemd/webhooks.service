@@ -1,6 +1,6 @@
 [Unit]
-Description=Email & Web Frontline Services
+Description=Webhooks service
 
 [Service]
-ExecStart=/usr/local/sbin/frontline-nginx -c /etc/mailway/frontline/nginx.conf
+ExecStart=/usr/local/sbin/webhooks
 Restart=always

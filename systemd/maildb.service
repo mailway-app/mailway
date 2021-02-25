@@ -1,6 +1,6 @@
 [Unit]
-Description=Webhooks service
+Description=Mail Database Service
 
 [Service]
-ExecStart=/usr/local/sbin/webhooks
+ExecStart=/usr/local/sbin/maildb
 Restart=always
