@@ -1,0 +1,6 @@
+[Unit]
+Description=Email & Web Frontline Services
+
+[Service]
+ExecStart=/usr/local/sbin/frontline-nginx -c /etc/mailway/frontline/nginx.conf
+Restart=always
