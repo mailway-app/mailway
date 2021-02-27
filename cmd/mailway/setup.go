@@ -163,11 +163,15 @@ func setup() error {
 	if isLocalSetup {
 		log.Info("Setup for local mode")
 	}
-
-	if err := runPreflightChecks(); err != nil {
-		return errors.Wrap(err, "preflight checks failed")
+	
+	if skipPreflight {
+		log.Info("preflight check skipped")
+	} else {
+		if err := runPreflightChecks(); err != nil {
+			return errors.Wrap(err, "preflight checks failed")
+		}
+		log.Info("preflight check passed")
 	}
-	log.Info("preflight check passed")
 
 	dkim, err := generateDKIM()
 	if err != nil {

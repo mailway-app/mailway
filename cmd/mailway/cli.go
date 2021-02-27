@@ -7,7 +7,8 @@ import (
 )
 
 var (
-	isLocalSetup bool
+	isLocalSetup  bool
+	skipPreflight bool
 
 	rootCmd = &cobra.Command{
 		Use:   "mailway",
@@ -131,6 +132,8 @@ var (
 func init() {
 	setupCmd.Flags().BoolVar(&isLocalSetup, "local", false,
 		"Don't connect with Mailway API, run in local mode")
+	setupCmd.Flags().BoolVar(&skipPreflight, "skip-preflight", false,
+		"Skips preflight check")
 
 	rootCmd.AddCommand(setupCmd)
 	rootCmd.AddCommand(setupSecureSMTPCmd)
