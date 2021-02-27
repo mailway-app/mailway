@@ -165,9 +165,17 @@ func setup() error {
 	}
 
 	if err := runPreflightChecks(); err != nil {
-		return errors.Wrap(err, "preflight checks failed")
+		prompt := promptui.Prompt{
+			Label:     fmt.Sprintf("The preflight checks failed because: %s. Confirm to ingore and continue the setup", err),
+			IsConfirm: true,
+		}
+
+		if _, err := prompt.Run(); err != nil {
+			return errors.New("The preflight checks failed")
+		}
+	} else {
+		log.Info("preflight check passed")
 	}
-	log.Info("preflight check passed")
 
 	dkim, err := generateDKIM()
 	if err != nil {
