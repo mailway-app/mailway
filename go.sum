@@ -151,6 +151,8 @@ github.com/mailway-app/config v0.0.0-20210221175155-59f4d4fc9427 h1:rCK8C0SgA0gx
 github.com/mailway-app/config v0.0.0-20210221175155-59f4d4fc9427/go.mod h1:wIptp9O+DqeKdh/SfCHLj1eg/nkDNugSGgn0JNY1ag8=
 github.com/mailway-app/config v0.0.0-20210227210532-ddd38d4b4000 h1:r6l6dAp2R0kC/TvxEGhWeggfL2D3sM2lmnKnSW998T4=
 github.com/mailway-app/config v0.0.0-20210227210532-ddd38d4b4000/go.mod h1:wIptp9O+DqeKdh/SfCHLj1eg/nkDNugSGgn0JNY1ag8=
+github.com/mailway-app/config v0.0.0-20210228114952-43e0fa42e09f h1:v5dG2HO/8lI7BS+I2avO3WGP/YK166Z6nf4NKUhRPos=
+github.com/mailway-app/config v0.0.0-20210228114952-43e0fa42e09f/go.mod h1:wIptp9O+DqeKdh/SfCHLj1eg/nkDNugSGgn0JNY1ag8=
 github.com/manifoldco/promptui v0.8.0 h1:R95mMF+McvXZQ7j1g8ucVZE1gLP3Sv6j9vlF9kyRqQo=
 github.com/manifoldco/promptui v0.8.0/go.mod h1:n4zTdgP0vr0S3w7/O/g98U+e0gwLScEXGwov2nIKuGQ=
 github.com/mattn/go-colorable v0.0.9 h1:UVL0vNpWh04HeJXV0KLcaT7r06gOH2l4OW6ddYRUIY4=

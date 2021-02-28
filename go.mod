@@ -6,7 +6,7 @@ require (
 	github.com/asaskevich/govalidator v0.0.0-20200907205600-7a23bdc65eef
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/magefile/mage v1.11.0 // indirect
-	github.com/mailway-app/config v0.0.0-20210227210532-ddd38d4b4000
+	github.com/mailway-app/config v0.0.0-20210228114952-43e0fa42e09f
 	github.com/manifoldco/promptui v0.8.0
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.8.0
