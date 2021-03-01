@@ -17,12 +17,13 @@ import (
 )
 
 func prompConfirm(isOptional bool, msg string) {
+	label := fmt.Sprintf("Did you %s", msg)
 	if v := os.Getenv("DEBIAN_FRONTEND"); v == "noninteractive" {
-		log.Info("Assuming yes because output is not a tty")
+		log.Infof("%s? Assuming yes because output is not a tty", label)
 		return
 	}
 	prompt := promptui.Prompt{
-		Label:     fmt.Sprintf("Did you %s", msg),
+		Label:     label,
 		IsConfirm: true,
 		Default:   "y",
 	}
@@ -166,10 +167,10 @@ func setup() error {
 
 	if err := runPreflightChecks(); err != nil {
 		if v := os.Getenv("DEBIAN_FRONTEND"); v == "noninteractive" {
-			log.Info("Assuming yes because output is not a tty")
+			log.Infof("The preflight checks failed because: %s. Ignoring and continuing because output is not a tty", err)
 		} else {
 			prompt := promptui.Prompt{
-				Label:     fmt.Sprintf("The preflight checks failed because: %s. Confirm to ingore and continue the setup", err),
+				Label:     fmt.Sprintf("The preflight checks failed because: %s. Confirm to ignore and continue the setup", err),
 				IsConfirm: true,
 			}
 
