@@ -14,11 +14,14 @@ var (
 
 func supervise() error {
 	done := make(chan interface{})
-	go func() {
-		if err := superviseServerJWT(); err != nil {
-			log.Fatalf("failed to supervise server JWT: %s", err)
-		}
-	}()
+
+	if !config.CurrConfig.IsInstanceLocal() {
+		go func() {
+			if err := superviseServerJWT(); err != nil {
+				log.Fatalf("failed to supervise server JWT: %s", err)
+			}
+		}()
+	}
 
 	log.Info("supervisor running")
 	<-done

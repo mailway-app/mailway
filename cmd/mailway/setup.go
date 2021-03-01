@@ -165,13 +165,17 @@ func setup() error {
 	}
 
 	if err := runPreflightChecks(); err != nil {
-		prompt := promptui.Prompt{
-			Label:     fmt.Sprintf("The preflight checks failed because: %s. Confirm to ingore and continue the setup", err),
-			IsConfirm: true,
-		}
+		if v := os.Getenv("DEBIAN_FRONTEND"); v == "noninteractive" {
+			log.Info("Assuming yes because output is not a tty")
+		} else {
+			prompt := promptui.Prompt{
+				Label:     fmt.Sprintf("The preflight checks failed because: %s. Confirm to ingore and continue the setup", err),
+				IsConfirm: true,
+			}
 
-		if _, err := prompt.Run(); err != nil {
-			return errors.New("The preflight checks failed")
+			if _, err := prompt.Run(); err != nil {
+				return errors.New("The preflight checks failed")
+			}
 		}
 	} else {
 		log.Info("preflight check passed")
