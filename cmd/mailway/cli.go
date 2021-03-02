@@ -36,12 +36,15 @@ var (
 		},
 	}
 	generateFrontlineConfigCmd = &cobra.Command{
-		Use:   "generate-frontline-config",
+		Use:   "reconfigure-frontline",
 		Short: "Mailway instance generate the frontline NGINX configuration",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := generateHTTPCert(); err != nil {
+				log.Error(err)
+			}
 			if err := generateFrontlineConf(); err != nil {
-				log.Fatal(err)
+				log.Error(err)
 			}
 			return nil
 		},

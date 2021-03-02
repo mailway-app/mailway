@@ -74,7 +74,7 @@ func generateHTTPCert() error {
 	}
 
 	// certificate
-	if err := saveCert(certPath, cert.Leaf); err != nil {
+	if err := saveCert(certPath, cert.Certificate); err != nil {
 		return errors.Wrap(err, "could not save certificate")
 	}
 
