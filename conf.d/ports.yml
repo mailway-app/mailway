@@ -5,3 +5,4 @@ port_mailout: 2525
 port_webhook: 2526
 port_forwarding: 2500
 port_maildb: 8081
+port_responder: 2501
