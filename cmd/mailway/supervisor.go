@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bytes"
 	"io/ioutil"
+	"net/mail"
 	"os"
 	"path"
 	"strings"
@@ -68,6 +70,11 @@ func superviseMailoutRetrier() error {
 				return errors.Wrap(err, "could not read file")
 			}
 
+			// ensures that the file has been in the queue for long enough
+			if time.Since(file.ModTime()) < MAILOUT_RETRY_INTERVAL {
+				continue
+			}
+
 			retryCount := retryCount(data)
 			nextRetry, err := getNextRetry(file.ModTime(), retryCount)
 			if err != nil {
@@ -75,7 +82,19 @@ func superviseMailoutRetrier() error {
 				continue
 			}
 
+			msg, err := mail.ReadMessage(bytes.NewReader(data))
+			if err != nil {
+				return errors.Wrap(err, "could not read message")
+			}
+
+			via := msg.Header.Get("Mw-Int-Via")
+			if via == "responder" {
+				log.Warnf("retry not yet supported for responder")
+				continue
+			}
+
 			if nextRetry.Before(time.Now()) {
+				log.Infof("%s retried %d time(s), retyring now", abspath, retryCount)
 				if err := recoverEmail(abspath); err != nil {
 					log.Errorf("failed to recover email: %s", err)
 
