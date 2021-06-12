@@ -27,20 +27,41 @@ func recoverEmail(file string) error {
 
 	from := msg.Header.Get("Mw-Int-Mail-From")
 	to := msg.Header.Get("Mw-Int-Rcpt-To")
+	via := msg.Header.Get("Mw-Int-Via")
 
-	addr := fmt.Sprintf("127.0.0.1:%d", config.CurrConfig.PortForwarding)
-	err = smtp.SendMail(addr, nil, from, []string{to}, data)
-	if err != nil {
-		return errors.Wrap(err, "could not send email")
+	if via == "forwarding" {
+		addr := fmt.Sprintf("127.0.0.1:%d", config.CurrConfig.PortForwarding)
+		err = smtp.SendMail(addr, nil, from, []string{to}, data)
+		if err != nil {
+			return errors.Wrap(err, "could not send email")
+		}
+
+		// no failures detected so far means that the message has made it back into
+		// the system, we can go ahead and delete the file. If another error occur
+		// a new file will be created
+		if err := os.Remove(file); err != nil {
+			return errors.Wrap(err, "could not delete file")
+		}
+		log.Info("mail sent")
+		return nil
 	}
 
-	// no failures detected so far means that the message has made it back into
-	// the system, we can go ahead and delete the file. If another error occur
-	// a new file will be created
-	if err := os.Remove(file); err != nil {
-		return errors.Wrap(err, "could not delete file")
+	if via == "responder" {
+		addr := fmt.Sprintf("127.0.0.1:%d", config.CurrConfig.PortResponder)
+		err = smtp.SendMail(addr, nil, from, []string{to}, data)
+		if err != nil {
+			return errors.Wrap(err, "could not send email")
+		}
+
+		// no failures detected so far means that the message has made it back into
+		// the system, we can go ahead and delete the file. If another error occur
+		// a new file will be created
+		if err := os.Remove(file); err != nil {
+			return errors.Wrap(err, "could not delete file")
+		}
+		log.Info("mail sent")
+		return nil
 	}
-	log.Info("mail sent")
 
 	return nil
 }

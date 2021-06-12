@@ -1,9 +1,7 @@
 package main
 
 import (
-	"bytes"
 	"io/ioutil"
-	"net/mail"
 	"os"
 	"path"
 	"strings"
@@ -79,17 +77,6 @@ func superviseMailoutRetrier() error {
 			nextRetry, err := getNextRetry(file.ModTime(), retryCount)
 			if err != nil {
 				log.Errorf("could not retry: %s", err)
-				continue
-			}
-
-			msg, err := mail.ReadMessage(bytes.NewReader(data))
-			if err != nil {
-				return errors.Wrap(err, "could not read message")
-			}
-
-			via := msg.Header.Get("Mw-Int-Via")
-			if via == "responder" {
-				log.Warnf("retry not yet supported for responder")
 				continue
 			}
 
